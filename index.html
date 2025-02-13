@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Birthday Layout</title>
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #f0f0f0 url('bg.gif') center/cover no-repeat;
+        }
+
+        .cake-container {
+            position: relative;
+            width: 30vmin;
+            max-width: 400px;
+            margin: 20px;
+            margin-top: 80px;
+        }
+
+        .cake {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Updated Candle Container Styles */
+        .candle-container {
+            position: absolute;
+            width: 23%;
+            aspect-ratio: 59/81; /* Adjust based on your candle proportions */
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            pointer-events: auto;
+        }
+
+        .candle-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transition: transform 0.1s;
+        }
+
+        /* Position CONTAINERS instead of images */
+        #candle1 { left: 52%; top: -4.5%; }
+        #candle2 { left: 62%; top: -8%; }
+        #candle3 { left: 73%; top: -4.5%; }
+
+        .banner {
+            width: 60vmin;
+            max-width: 480px;
+            margin-top: 20px;
+        }
+
+        .banner-img {
+            width: 100%;
+            height: auto;
+        }
+
+        @media (max-width: 600px) {
+            .cake-container { width: 70vmin; }
+            .banner { width: 85vmin; }
+        }
+
+        .candle-container:active .candle-img {
+            transform: scale(0.95);
+        }
+
+        img {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* Floating Elements Layer */
+        .floating-element {
+            position: fixed;
+            pointer-events: auto;
+            user-select: none;
+            z-index: 1000;
+            transition: opacity 0.3s;
+            image-rendering: crisp-edges; /* Prevents blurry scaling */
+            image-rendering: -moz-crisp-edges;
+            image-rendering: -o-crisp-edges;
+            image-rendering: -webkit-optimize-contrast;
+            transform: translateZ(0); /* Enables GPU scaling */
+        }
+
+        .bubble {
+            animation: float 8s infinite linear;
+            filter: drop-shadow(2px 2px 5px rgba(0,0,0,0.1));
+            cursor: pointer;
+            transform: scale(1.5); /* Makes bubbles 1.5x bigger */
+            transform-origin: center center;
+        }
+
+        .balloon {
+            cursor: grab;
+            transition: transform 0.2s;
+            transform: scale(2); /* Makes balloons 2x bigger */
+            transform-origin: center bottom;
+        }
+
+        .balloon:active {
+            cursor: grabbing;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-20px) rotate(3deg); }
+            50% { transform: translateY(-40px) rotate(-2deg); }
+            75% { transform: translateY(-20px) rotate(3deg); }
+        }
+        
+    </style>
+</head>
+
+<body>
+    <div class="cake-container">
+        <img src="cake.gif" alt="Cake" class="cake">
+        <!-- Updated candle structure with containers -->
+        <div class="candle-container" id="candle1">
+            <img src="lit_candle_1.gif" alt="Candle" class="candle-img">
+        </div>
+        <div class="candle-container" id="candle2">
+            <img src="lit_candle_1.gif" alt="Candle" class="candle-img">
+        </div>
+        <div class="candle-container" id="candle3">
+            <img src="lit_candle_1.gif" alt="Candle" class="candle-img">
+        </div>
+    </div>
+
+    <div class="banner">
+        <img src="banner.png" alt="Celebration Banner" class="banner-img">
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Candle functionality
+            const preloadImages = ['blowing_candle_1.gif', 'unlit_candle_1.gif'];
+            preloadImages.forEach(src => new Image().src = src);
+        
+            function blowOutCandle(event) {
+                const container = event.currentTarget;
+                const candleImg = container.querySelector('.candle-img');
+                if (!candleImg || !candleImg.src.includes('lit_candle')) return;
+        
+                const startTime = Date.now();
+                container.style.pointerEvents = 'none';
+                candleImg.src = `blowing_candle_1.gif?t=${Date.now()}`;
+        
+                const checkFrame = () => {
+                    if (Date.now() - startTime >= 2600) {
+                        candleImg.src = 'unlit_candle_1.gif';
+                        container.removeEventListener('click', blowOutCandle);
+                        container.removeEventListener('touchstart', blowOutCandle);
+                    } else {
+                        requestAnimationFrame(checkFrame);
+                    }
+                };
+                requestAnimationFrame(checkFrame);
+            }
+        
+            // Attach candle listeners
+            document.querySelectorAll('.candle-container').forEach(container => {
+                container.addEventListener('click', blowOutCandle);
+                container.addEventListener('touchstart', blowOutCandle);
+                container.style.touchAction = 'manipulation';
+            });
+        
+            // Floating elements system
+            const cakeRect = document.querySelector('.cake-container')?.getBoundingClientRect() || { left: 0, top: 0 };
+            const elements = new Map();
+            let currentDragged = null;
+            let velocity = { x: 0, y: 0 };
+        
+            const spawnConfig = {
+                bubble: { 
+                    rate: 3000, 
+                    max: 15,
+                    size: { min: 100, max: 200 }
+                },
+                balloon: { 
+                    rate: 5000, 
+                    max: 8,
+                    size: { min: 150, max: 300 },
+                    speed: { min: 0.1, max: 0.3 }
+                }
+            };
+        
+            function spawnFloatingElement(type) {
+                try {
+                    if (document.querySelectorAll(`.${type}`).length >= spawnConfig[type].max) return;
+        
+                    const element = document.createElement('img');
+                    element.className = `floating-element ${type}`;
+                    element.src = `${type}.png`;
+                    
+                    // Random position with safe area
+                    const baseSize = Math.random() * 
+                        (spawnConfig[type].size.max - spawnConfig[type].size.min) + 
+                        spawnConfig[type].size.min;
+                    
+                    const [x, y] = (() => {
+                        let posX, posY;
+                        do {
+                            posX = Math.random() * (window.innerWidth - baseSize);
+                            posY = Math.random() * (window.innerHeight - baseSize);
+                        } while (Math.abs(posX - cakeRect.left) < 200 && Math.abs(posY - cakeRect.top) < 200);
+                        return [posX, posY];
+                    })();
+        
+                    element.style.width = `${baseSize}px`;
+                    element.style.left = `${x}px`;
+                    element.style.top = `${y}px`;
+        
+                    if (type === 'bubble') {
+                        element.style.opacity = Math.random() * 0.5 + 0.5;
+                        element.addEventListener('click', () => {
+                            element.style.opacity = '0';
+                            setTimeout(() => element.remove(), 300);
+                        });
+                    }
+        
+                    if (type === 'balloon') {
+                        element.style.transform = `rotate(${Math.random() * 15 - 7.5}deg)`;
+                        const initialSpeed = spawnConfig.balloon.speed;
+                        elements.set(element, { 
+                            x, y, 
+                            vx: (Math.random() - 0.5) * initialSpeed.max,
+                            vy: -Math.random() * initialSpeed.max,
+                            floatSeed: Math.random() * 1000 // Unique motion pattern
+                        });
+                        setupBalloonDrag(element);
+                    }
+        
+                    document.body.appendChild(element);
+                } catch (error) {
+                    console.error('Error spawning element:', error);
+                }
+            }
+        
+            function setupBalloonDrag(balloon) {
+                let isDragging = false;
+                let lastPos = { x: 0, y: 0 };
+                let lastTime = Date.now();
+        
+                const handleMove = (clientX, clientY) => {
+                    const data = elements.get(balloon);
+                    const now = Date.now();
+                    const deltaTime = (now - lastTime) / 1000;
+                    
+                    velocity.x = (clientX - lastPos.x) / deltaTime;
+                    velocity.y = (clientY - lastPos.y) / deltaTime;
+                    
+                    balloon.style.left = `${clientX}px`;
+                    balloon.style.top = `${clientY}px`;
+                    data.x = clientX;
+                    data.y = clientY;
+                    
+                    lastPos = { x: clientX, y: clientY };
+                    lastTime = now;
+                };
+        
+                const startDrag = (e) => {
+                    isDragging = true;
+                    currentDragged = balloon;
+                    const clientX = e.touches?.[0]?.clientX ?? e.clientX;
+                    const clientY = e.touches?.[0]?.clientY ?? e.clientY;
+                    lastPos = { x: clientX, y: clientY };
+                    lastTime = Date.now();
+                };
+        
+                const drag = (e) => {
+                    if (!isDragging) return;
+                    const clientX = e.touches?.[0]?.clientX ?? e.clientX;
+                    const clientY = e.touches?.[0]?.clientY ?? e.clientY;
+                    handleMove(clientX, clientY);
+                };
+        
+                const endDrag = () => {
+                    if (!isDragging) return;
+                    isDragging = false;
+                    currentDragged = null;
+                    const data = elements.get(balloon);
+                    data.vx = velocity.x * 0.5;
+                    data.vy = velocity.y * 0.5;
+                };
+        
+                balloon.addEventListener('mousedown', startDrag);
+                balloon.addEventListener('touchstart', startDrag);
+                document.addEventListener('mousemove', drag);
+                document.addEventListener('touchmove', drag);
+                document.addEventListener('mouseup', endDrag);
+                document.addEventListener('touchend', endDrag);
+            }
+        
+            function updateElements() {
+                const now = Date.now();
+                elements.forEach((data, element) => {
+                    if (element === currentDragged) return;
+                    
+                    if (element.classList.contains('balloon')) {
+                        // Natural floating motion with variation
+                        const time = now * 0.001 + data.floatSeed;
+                        data.vx += Math.cos(time * 0.8) * 0.015;
+                        data.vy += Math.sin(time * 1.2) * 0.02 - 0.01;
+                        
+                        // Apply damping
+                        data.vx *= 0.93;
+                        data.vy *= 0.95;
+                    }
+                    
+                    // Update position
+                    data.x += data.vx;
+                    data.y += data.vy;
+                    
+                    // Screen wrapping
+                    const rect = element.getBoundingClientRect();
+                    if (data.x < -rect.width) data.x = window.innerWidth;
+                    if (data.x > window.innerWidth) data.x = -rect.width;
+                    if (data.y < -rect.height) data.y = window.innerHeight;
+        
+                    element.style.left = `${data.x}px`;
+                    element.style.top = `${data.y}px`;
+                });
+                requestAnimationFrame(updateElements);
+            }
+        
+            // Start spawning
+            setInterval(() => spawnFloatingElement('bubble'), spawnConfig.bubble.rate);
+            setInterval(() => spawnFloatingElement('balloon'), spawnConfig.balloon.rate);
+            updateElements();
+        });
+        </script>
+</body>
+</html>
