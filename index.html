@@ -228,7 +228,7 @@
                     }
         
                     if (type === 'balloon') {
-                        element.style.transform = `rotate(${Math.random() * 15 - 7.5}deg)`;
+                        element.style.transform = `rotate(${Math.random() * 15 - 7.5}deg) scale(2)`;
                         const initialSpeed = spawnConfig.balloon.speed;
                         elements.set(element, { 
                             x, y, 
@@ -245,60 +245,71 @@
                 }
             }
         
-            function setupBalloonDrag(balloon) {
-                let isDragging = false;
-                let lastPos = { x: 0, y: 0 };
-                let lastTime = Date.now();
+            
+        const MAX_SPEED = 1200; // px/sec
+
+        function setupBalloonDrag(balloon) {
+            balloon.draggable = false;
+            balloon.style.touchAction = 'none';
         
-                const handleMove = (clientX, clientY) => {
-                    const data = elements.get(balloon);
-                    const now = Date.now();
-                    const deltaTime = (now - lastTime) / 1000;
-                    
-                    velocity.x = (clientX - lastPos.x) / deltaTime;
-                    velocity.y = (clientY - lastPos.y) / deltaTime;
-                    
-                    balloon.style.left = `${clientX}px`;
-                    balloon.style.top = `${clientY}px`;
-                    data.x = clientX;
-                    data.y = clientY;
-                    
-                    lastPos = { x: clientX, y: clientY };
-                    lastTime = now;
-                };
+            let isDragging = false;
+            let grab = { x: 0, y: 0 };
+            let lastPos = { x: 0, y: 0 };
+            let lastTime = 0;
+            const vel = { x: 0, y: 0 }; // px/sec, per balloon
         
-                const startDrag = (e) => {
-                    isDragging = true;
-                    currentDragged = balloon;
-                    const clientX = e.touches?.[0]?.clientX ?? e.clientX;
-                    const clientY = e.touches?.[0]?.clientY ?? e.clientY;
-                    lastPos = { x: clientX, y: clientY };
-                    lastTime = Date.now();
-                };
+            const pt = (e) => e.touches?.[0] ?? e;
         
-                const drag = (e) => {
-                    if (!isDragging) return;
-                    const clientX = e.touches?.[0]?.clientX ?? e.clientX;
-                    const clientY = e.touches?.[0]?.clientY ?? e.clientY;
-                    handleMove(clientX, clientY);
-                };
+            const startDrag = (e) => {
+                e.preventDefault();
+                const p = pt(e);
+                const data = elements.get(balloon);
+                isDragging = true;
+                currentDragged = balloon;
+                grab.x = p.clientX - data.x;
+                grab.y = p.clientY - data.y;
+                lastPos = { x: p.clientX, y: p.clientY };
+                lastTime = performance.now();
+                vel.x = vel.y = 0;
+            };
         
-                const endDrag = () => {
-                    if (!isDragging) return;
-                    isDragging = false;
-                    currentDragged = null;
-                    const data = elements.get(balloon);
-                    data.vx = velocity.x * 0.5;
-                    data.vy = velocity.y * 0.5;
-                };
+            const drag = (e) => {
+                if (!isDragging) return;
+                e.preventDefault();
+                const p = pt(e);
+                const data = elements.get(balloon);
+                const now = performance.now();
+                const dt = Math.max((now - lastTime) / 1000, 1 / 240); // never 0
         
-                balloon.addEventListener('mousedown', startDrag);
-                balloon.addEventListener('touchstart', startDrag);
-                document.addEventListener('mousemove', drag);
-                document.addEventListener('touchmove', drag);
-                document.addEventListener('mouseup', endDrag);
-                document.addEventListener('touchend', endDrag);
-            }
+                // smoothed velocity in px/sec
+                vel.x = vel.x * 0.7 + ((p.clientX - lastPos.x) / dt) * 0.3;
+                vel.y = vel.y * 0.7 + ((p.clientY - lastPos.y) / dt) * 0.3;
+        
+                data.x = p.clientX - grab.x;
+                data.y = p.clientY - grab.y;
+        
+                lastPos = { x: p.clientX, y: p.clientY };
+                lastTime = now;
+            };
+        
+            const endDrag = () => {
+                if (!isDragging) return;
+                isDragging = false;
+                currentDragged = null;
+                const data = elements.get(balloon);
+                const clamp = (v) => Math.max(-MAX_SPEED, Math.min(MAX_SPEED, v * 0.5));
+                data.vx = clamp(vel.x) / 60; // px/sec -> px/frame
+                data.vy = clamp(vel.y) / 60;
+            };
+        
+            balloon.addEventListener('mousedown', startDrag);
+            balloon.addEventListener('touchstart', startDrag, { passive: false });
+            balloon.addEventListener('dragstart', (e) => e.preventDefault());
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('touchmove', drag, { passive: false });
+            document.addEventListener('mouseup', endDrag);
+            document.addEventListener('touchend', endDrag);
+        }
         
             function updateElements() {
                 const now = Date.now();
