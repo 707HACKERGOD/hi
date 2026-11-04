@@ -1,407 +1,391 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Birthday Layout</title>
-<style>
-    html, body { height: 100%; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Birthday Layout</title>
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #f0f0f0 url('bg.gif') center/cover no-repeat;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-    body {
-        margin: 0;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        background: #f0f0f0 url('bg.gif') center/cover no-repeat;
-        user-select: none;
-        -webkit-user-select: none;
-        -webkit-touch-callout: none;
-        -webkit-tap-highlight-color: transparent;
-    }
+        img {
+            -webkit-user-drag: none;
+            -khtml-user-drag: none;
+            -moz-user-drag: none;
+            -o-user-drag: none;
+            user-drag: none;
+        }
 
-    img {
-        -webkit-user-drag: none;
-        user-drag: none;
-        -webkit-user-select: none;
-        user-select: none;
-        -webkit-touch-callout: none;
-        -webkit-tap-highlight-color: transparent;
-    }
+        .cake-container {
+            position: relative;
+            width: 30vmin;
+            max-width: 400px;
+            margin: 20px;
+            margin-top: 80px;
+        }
 
-    .cake-container {
-        position: relative;
-        width: 30vmin;
-        max-width: 400px;
-        margin: 20px;
-        margin-top: 80px;
-    }
+        .cake {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
 
-    .cake { width: 100%; height: auto; display: block; }
+        .candle-container {
+            position: absolute;
+            width: 23%;
+            aspect-ratio: 59/81;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+        }
 
-    .candle-container {
-        position: absolute;
-        width: 23%;
-        aspect-ratio: 59/81;
-        transform: translate(-50%, -50%);
-        cursor: pointer;
-        touch-action: manipulation;
-    }
+        .candle-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transition: transform 0.1s;
+        }
 
-    .candle-img {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        transition: transform 0.1s;
-    }
+        #candle1 { left: 52%; top: -4.5%; }
+        #candle2 { left: 62%; top: -8%; }
+        #candle3 { left: 73%; top: -4.5%; }
 
-    #candle1 { left: 52%; top: -4.5%; }
-    #candle2 { left: 62%; top: -8%; }
-    #candle3 { left: 73%; top: -4.5%; }
+        .banner {
+            width: 60vmin;
+            max-width: 480px;
+            margin-top: 20px;
+        }
 
-    .candle-container:active .candle-img { transform: scale(0.95); }
+        .banner-img {
+            width: 100%;
+            height: auto;
+        }
 
-    .banner { width: 60vmin; max-width: 480px; margin-top: 20px; }
-    .banner-img { width: 100%; height: auto; }
+        @media (max-width: 600px) {
+            .cake-container { width: 70vmin; }
+            .banner { width: 85vmin; }
+        }
 
-    @media (max-width: 600px) {
-        .cake-container { width: 70vmin; }
-        .banner { width: 85vmin; }
-    }
+        .candle-container:active .candle-img {
+            transform: scale(0.95);
+        }
 
-    .floating-element {
-        position: fixed;
-        left: 0;
-        top: 0;
-        pointer-events: auto;
-        user-select: none;
-        z-index: 1000;
-        transition: opacity 0.3s;
-        will-change: transform, left, top;
-    }
+        .floating-element {
+            position: fixed;
+            pointer-events: auto;
+            user-select: none;
+            z-index: 1000;
+            transition: opacity 0.3s;
+            image-rendering: crisp-edges;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: -o-crisp-edges;
+            image-rendering: -webkit-optimize-contrast;
+            transform: translateZ(0);
+        }
 
-    .bubble {
-        animation: float 8s infinite linear;
-        filter: drop-shadow(2px 2px 5px rgba(0,0,0,0.1));
-        cursor: pointer;
-    }
+        .bubble {
+            animation: float 8s infinite linear;
+            filter: drop-shadow(2px 2px 5px rgba(0,0,0,0.1));
+            cursor: pointer;
+        }
 
-    .balloon {
-        cursor: grab;
-        touch-action: none;
-        transform-origin: 50% 50%;
-    }
+        .balloon {
+            cursor: grab;
+            transition: transform 0.2s;
+            transform-origin: center bottom;
+            touch-action: none;
+        }
 
-    .balloon.dragging {
-        cursor: grabbing;
-        z-index: 1500;
-    }
+        .balloon.dragging {
+            cursor: grabbing;
+            z-index: 1500;
+        }
 
-    @keyframes float {
-        0%, 100% { transform: translateY(0) rotate(0deg); }
-        25%      { transform: translateY(-20px) rotate(3deg); }
-        50%      { transform: translateY(-40px) rotate(-2deg); }
-        75%      { transform: translateY(-20px) rotate(3deg); }
-    }
-</style>
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-20px) rotate(3deg); }
+            50% { transform: translateY(-40px) rotate(-2deg); }
+            75% { transform: translateY(-20px) rotate(3deg); }
+        }
+    </style>
 </head>
 
 <body>
     <div class="cake-container">
-        <img src="cake.gif" alt="Cake" class="cake">
+        <img src="cake.gif" alt="Cake" class="cake" draggable="false">
         <div class="candle-container" id="candle1">
-            <img src="lit_candle_1.gif" alt="Candle" class="candle-img">
+            <img src="lit_candle_1.gif" alt="Candle" class="candle-img" draggable="false">
         </div>
         <div class="candle-container" id="candle2">
-            <img src="lit_candle_1.gif" alt="Candle" class="candle-img">
+            <img src="lit_candle_1.gif" alt="Candle" class="candle-img" draggable="false">
         </div>
         <div class="candle-container" id="candle3">
-            <img src="lit_candle_1.gif" alt="Candle" class="candle-img">
+            <img src="lit_candle_1.gif" alt="Candle" class="candle-img" draggable="false">
         </div>
     </div>
 
     <div class="banner">
-        <img src="banner.png" alt="Celebration Banner" class="banner-img">
+        <img src="banner.png" alt="Celebration Banner" class="banner-img" draggable="false">
     </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
+    <script>
+        document.addEventListener('dragstart', e => e.preventDefault());
 
-    document.addEventListener('dragstart', e => e.preventDefault());
-    document.querySelectorAll('img').forEach(img => { img.draggable = false; });
+        document.addEventListener('DOMContentLoaded', () => {
+            const preloadImages = ['blowing_candle_1.gif', 'unlit_candle_1.gif'];
+            preloadImages.forEach(src => new Image().src = src);
 
-    ['blowing_candle_1.gif', 'unlit_candle_1.gif'].forEach(src => { new Image().src = src; });
+            function blowOutCandle(event) {
+                const container = event.currentTarget;
+                const candleImg = container.querySelector('.candle-img');
+                if (!candleImg || !candleImg.src.includes('lit_candle')) return;
 
-    function blowOutCandle(event) {
-        const container = event.currentTarget;
-        if (container.dataset.blown) return;
+                const startTime = Date.now();
+                container.style.pointerEvents = 'none';
+                candleImg.src = `blowing_candle_1.gif?t=${Date.now()}`;
 
-        const candleImg = container.querySelector('.candle-img');
-        if (!candleImg || !candleImg.src.includes('lit_candle')) return;
+                const checkFrame = () => {
+                    if (Date.now() - startTime >= 2600) {
+                        candleImg.src = 'unlit_candle_1.gif';
+                        container.removeEventListener('click', blowOutCandle);
+                        container.removeEventListener('touchstart', blowOutCandle);
+                    } else {
+                        requestAnimationFrame(checkFrame);
+                    }
+                };
+                requestAnimationFrame(checkFrame);
+            }
 
-        container.dataset.blown = '1';
-        candleImg.src = `blowing_candle_1.gif?t=${Date.now()}`;
-        setTimeout(() => { candleImg.src = 'unlit_candle_1.gif'; }, 2600);
-    }
+            document.querySelectorAll('.candle-container').forEach(container => {
+                container.addEventListener('click', blowOutCandle);
+                container.addEventListener('touchstart', blowOutCandle);
+                container.style.touchAction = 'manipulation';
+            });
 
-    document.querySelectorAll('.candle-container').forEach(container => {
-        container.addEventListener('click', blowOutCandle);
-        container.style.touchAction = 'manipulation';
-    });
+            const cakeRect = document.querySelector('.cake-container')?.getBoundingClientRect() || { left: 0, top: 0 };
+            const elements = new Map();
+            let currentDragged = null;
 
-    const rand  = (a, b) => a + Math.random() * (b - a);
-    const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
-
-    const CFG = {
-        bubble:  { rate: 2800, max: 14, size: [60, 120] },
-        balloon: { rate: 3500, max: 7,  size: [70, 110] }
-    };
-
-    function randomPosition(w, h) {
-        const W = window.innerWidth, H = window.innerHeight;
-        const cake = document.querySelector('.cake-container');
-        const cr = cake ? cake.getBoundingClientRect() : null;
-        const maxX = Math.max(0, W - w), maxY = Math.max(0, H - h);
-
-        for (let i = 0; i < 20; i++) {
-            const x = rand(0, maxX), y = rand(0, maxY);
-            if (!cr) return { x, y };
-            const pad = 30;
-            const overlaps =
-                x + w > cr.left  - pad && x < cr.right  + pad &&
-                y + h > cr.top   - pad && y < cr.bottom + pad;
-            if (!overlaps) return { x, y };
-        }
-        return { x: rand(0, maxX), y: rand(0, maxY) };
-    }
-
-    function spawnBubble() {
-        if (document.querySelectorAll('.bubble').length >= CFG.bubble.max) return;
-
-        const el = document.createElement('img');
-        el.className = 'floating-element bubble';
-        el.alt = '';
-        el.draggable = false;
-
-        const size = Math.round(rand(CFG.bubble.size[0], CFG.bubble.size[1]));
-        el.style.width   = size + 'px';
-        el.style.opacity = rand(0.5, 1).toFixed(2);
-
-        const pos = randomPosition(size, size);
-        el.style.left = pos.x + 'px';
-        el.style.top  = pos.y + 'px';
-
-        el.addEventListener('pointerdown', e => {
-            e.preventDefault();
-            el.style.opacity = '0';
-            setTimeout(() => el.remove(), 300);
-        });
-
-        el.src = 'bubble.png';
-        document.body.appendChild(el);
-    }
-
-    const balloons  = new Map();
-    let   activeDrag = null;
-
-    const LIFT     = 85;
-    const AIR_DAMP = 0.3;
-    const MAXV     = 900;
-    let   lastT    = performance.now();
-
-    function spawnBalloon() {
-        if (document.querySelectorAll('.balloon').length >= CFG.balloon.max) return;
-
-        const el = document.createElement('img');
-        el.className = 'floating-element balloon';
-        el.alt = '';
-        el.draggable = false;
-
-        const size = Math.round(rand(CFG.balloon.size[0], CFG.balloon.size[1]));
-        el.style.width = size + 'px';
-        el.style.visibility = 'hidden';
-        document.body.appendChild(el);
-
-        const place = () => {
-            if (!el.isConnected) return;
-
-            const w = el.offsetWidth  || size;
-            const h = el.offsetHeight || size * 1.4;
-            const pos = randomPosition(w, h);
-
-            const state = {
-                el, w, h,
-                x: pos.x, y: pos.y,
-                vx: rand(-20, 20),
-                vy: rand(-40, -10),
-                phase: rand(0, Math.PI * 2),
-                sq: 0, sqv: 0,
-                dragging: false
+            const spawnConfig = {
+                bubble: {
+                    rate: 3000,
+                    max: 15,
+                    size: { min: 100, max: 200 }
+                },
+                balloon: {
+                    rate: 5000,
+                    max: 8,
+                    size: { min: 70, max: 120 },
+                    speed: { min: 0.1, max: 0.3 }
+                }
             };
 
-            balloons.set(el, state);
-            el.style.left = state.x + 'px';
-            el.style.top  = state.y + 'px';
-            el.style.visibility = '';
-            el.addEventListener('pointerdown', onBalloonDown);
-        };
+            function spawnFloatingElement(type) {
+                try {
+                    if (document.querySelectorAll(`.${type}`).length >= spawnConfig[type].max) return;
 
-        el.addEventListener('load',  place, { once: true });
-        el.addEventListener('error', () => el.remove(), { once: true });
-        el.src = 'balloon.png';
-        if (el.complete && el.naturalWidth) place();
-    }
+                    const element = document.createElement('img');
+                    element.className = `floating-element ${type}`;
+                    element.draggable = false;
+                    element.src = `${type}.png`;
 
-    function onBalloonDown(e) {
-        if (activeDrag) return;
-        if (e.pointerType === 'mouse' && e.button !== 0) return;
+                    const baseSize = Math.random() *
+                        (spawnConfig[type].size.max - spawnConfig[type].size.min) +
+                        spawnConfig[type].size.min;
 
-        const el = e.currentTarget;
-        const b  = balloons.get(el);
-        if (!b) return;
+                    const [x, y] = (() => {
+                        let posX, posY;
+                        do {
+                            posX = Math.random() * (window.innerWidth - baseSize);
+                            posY = Math.random() * (window.innerHeight - baseSize);
+                        } while (Math.abs(posX - cakeRect.left) < 200 && Math.abs(posY - cakeRect.top) < 200);
+                        return [posX, posY];
+                    })();
 
-        e.preventDefault();
-        try { el.setPointerCapture(e.pointerId); } catch (_) {}
+                    element.style.width = `${baseSize}px`;
+                    element.style.left = `${x}px`;
+                    element.style.top = `${y}px`;
 
-        activeDrag = {
-            el, b,
-            pointerId: e.pointerId,
-            offX: e.clientX - b.x,
-            offY: e.clientY - b.y,
-            lastT: performance.now(),
-            vx: 0, vy: 0,
-            moved: 0,
-            startT: performance.now()
-        };
+                    if (type === 'bubble') {
+                        element.style.opacity = Math.random() * 0.5 + 0.5;
+                        element.addEventListener('click', () => {
+                            element.style.opacity = '0';
+                            setTimeout(() => element.remove(), 300);
+                        });
+                    }
 
-        b.dragging = true;
-        el.classList.add('dragging');
-        el.addEventListener('pointermove',   onBalloonMove);
-        el.addEventListener('pointerup',     onBalloonUp);
-        el.addEventListener('pointercancel', onBalloonUp);
-    }
+                    if (type === 'balloon') {
+                        element.style.transform = `rotate(${Math.random() * 15 - 7.5}deg)`;
+                        const initialSpeed = spawnConfig.balloon.speed;
+                        elements.set(element, {
+                            x, y,
+                            vx: (Math.random() - 0.5) * initialSpeed.max,
+                            vy: -Math.random() * initialSpeed.max,
+                            floatSeed: Math.random() * 1000
+                        });
+                        setupBalloonDrag(element);
+                    }
 
-    function onBalloonMove(e) {
-        const d = activeDrag;
-        if (!d || e.pointerId !== d.pointerId) return;
-        e.preventDefault();
-
-        const now = performance.now();
-        const dt  = Math.max((now - d.lastT) / 1000, 1 / 240);
-        const nx  = e.clientX - d.offX;
-        const ny  = e.clientY - d.offY;
-
-        const dx = nx - d.b.x;
-        const dy = ny - d.b.y;
-        d.moved += Math.hypot(dx, dy);
-
-        d.vx = d.vx * 0.7 + (dx / dt) * 0.3;
-        d.vy = d.vy * 0.7 + (dy / dt) * 0.3;
-
-        d.b.x = nx;
-        d.b.y = ny;
-        d.lastT = now;
-    }
-
-    function onBalloonUp(e) {
-        const d = activeDrag;
-        if (!d || e.pointerId !== d.pointerId) return;
-
-        const { el, b } = d;
-
-        el.classList.remove('dragging');
-        el.removeEventListener('pointermove',   onBalloonMove);
-        el.removeEventListener('pointerup',     onBalloonUp);
-        el.removeEventListener('pointercancel', onBalloonUp);
-        try { el.releasePointerCapture(e.pointerId); } catch (_) {}
-
-        b.dragging = false;
-        const held = performance.now() - d.startT;
-
-        if (d.moved < 10 && held < 400) {
-            const cx = b.x + b.w / 2;
-            const cy = b.y + b.h / 2;
-
-            let dx = cx - e.clientX;
-            let dy = cy - e.clientY;
-            let dist = Math.hypot(dx, dy);
-            if (dist < 1) { dx = 0; dy = -1; dist = 1; }
-
-            const maxD  = Math.max(b.w, b.h) * 0.5;
-            const power = 200 + 300 * Math.min(dist / maxD, 1);
-
-            b.vx += (dx / dist) * power;
-            b.vy += (dy / dist) * power;
-            b.sqv += 5;
-        } else {
-            b.vx = clamp(d.vx, -MAXV, MAXV);
-            b.vy = clamp(d.vy, -MAXV, MAXV);
-        }
-
-        activeDrag = null;
-    }
-
-    function tick(now) {
-        const dt = Math.min((now - lastT) / 1000, 0.05);
-        lastT = now;
-        const t = now / 1000;
-
-        const W = window.innerWidth;
-        const H = window.innerHeight;
-
-        balloons.forEach(b => {
-            b.sqv += (-b.sq * 400 - b.sqv * 18) * dt;
-            b.sq   = clamp(b.sq + b.sqv * dt, -0.4, 0.4);
-
-            if (!b.dragging) {
-                b.vy -= LIFT * dt;
-
-                b.vx += Math.sin(t * 1.3 + b.phase) * 30 * dt;
-                b.vy += Math.cos(t * 0.9 + b.phase) * 12 * dt;
-
-                const damp = Math.pow(AIR_DAMP, dt);
-                b.vx *= damp;
-                b.vy *= damp;
-
-                b.vx = clamp(b.vx, -MAXV, MAXV);
-                b.vy = clamp(b.vy, -MAXV, MAXV);
-
-                b.x += b.vx * dt;
-                b.y += b.vy * dt;
-
-                if (b.x < 0) { b.x = 0; b.vx = Math.abs(b.vx) * 0.6; }
-                else if (b.x + b.w > W) { b.x = W - b.w; b.vx = -Math.abs(b.vx) * 0.6; }
-
-                if (b.y + b.h > H) { b.y = H - b.h; b.vy = -Math.abs(b.vy) * 0.4; }
-
-                if (b.y + b.h < -60) {
-                    b.x  = rand(0, Math.max(0, W - b.w));
-                    b.y  = H + 20;
-                    b.vx = rand(-30, 30);
-                    b.vy = -rand(40, 90);
+                    document.body.appendChild(element);
+                } catch (error) {
+                    console.error('Error spawning element:', error);
                 }
             }
 
-            b.el.style.left = b.x + 'px';
-            b.el.style.top  = b.y + 'px';
+            const MAX_SPEED = 1200;
 
-            const tilt = clamp(b.vx * 0.03, -14, 14);
-            const sx = 1 + b.sq * 0.5;
-            const sy = 1 - b.sq * 0.5;
-            b.el.style.transform =
-                `rotate(${tilt.toFixed(2)}deg) scale(${sx.toFixed(3)}, ${sy.toFixed(3)})`;
+            function setupBalloonDrag(balloon) {
+                balloon.draggable = false;
+                balloon.style.touchAction = 'none';
+
+                let isDragging = false;
+                let grab = { x: 0, y: 0 };
+                let lastPos = { x: 0, y: 0 };
+                let lastClient = { x: 0, y: 0 };
+                let lastTime = 0;
+                let startTime = 0;
+                let totalMoved = 0;
+                const vel = { x: 0, y: 0 };
+
+                const pt = (e) => e.touches?.[0] ?? e.changedTouches?.[0] ?? e;
+
+                const startDrag = (e) => {
+                    e.preventDefault();
+                    const p = pt(e);
+                    const data = elements.get(balloon);
+                    if (!data) return;
+
+                    isDragging = true;
+                    currentDragged = balloon;
+                    grab.x = p.clientX - data.x;
+                    grab.y = p.clientY - data.y;
+                    lastPos = { x: p.clientX, y: p.clientY };
+                    lastClient = { x: p.clientX, y: p.clientY };
+                    lastTime = performance.now();
+                    startTime = lastTime;
+                    totalMoved = 0;
+                    vel.x = vel.y = 0;
+                    balloon.classList.add('dragging');
+                };
+
+                const drag = (e) => {
+                    if (!isDragging) return;
+                    e.preventDefault();
+                    const p = pt(e);
+                    const data = elements.get(balloon);
+                    if (!data) return;
+
+                    const now = performance.now();
+                    const dt = Math.max((now - lastTime) / 1000, 1 / 240);
+
+                    const dx = p.clientX - lastPos.x;
+                    const dy = p.clientY - lastPos.y;
+                    totalMoved += Math.hypot(dx, dy);
+
+                    vel.x = vel.x * 0.7 + (dx / dt) * 0.3;
+                    vel.y = vel.y * 0.7 + (dy / dt) * 0.3;
+
+                    data.x = p.clientX - grab.x;
+                    data.y = p.clientY - grab.y;
+                    balloon.style.left = data.x + 'px';
+                    balloon.style.top = data.y + 'px';
+
+                    lastPos = { x: p.clientX, y: p.clientY };
+                    lastClient = { x: p.clientX, y: p.clientY };
+                    lastTime = now;
+                };
+
+                const endDrag = () => {
+                    if (!isDragging) return;
+                    isDragging = false;
+                    currentDragged = null;
+                    balloon.classList.remove('dragging');
+
+                    const data = elements.get(balloon);
+                    if (!data) return;
+
+                    const held = performance.now() - startTime;
+
+                    if (totalMoved < 10 && held < 400) {
+                        const w = balloon.offsetWidth;
+                        const h = balloon.offsetHeight;
+                        const cx = data.x + w / 2;
+                        const cy = data.y + h / 2;
+
+                        let dx = cx - lastClient.x;
+                        let dy = cy - lastClient.y;
+                        let dist = Math.hypot(dx, dy);
+                        if (dist < 1) { dx = 0; dy = -1; dist = 1; }
+
+                        const nx = dx / dist;
+                        const ny = dy / dist;
+                        const maxDist = Math.max(w, h) * 0.5;
+                        const strength = (200 + 300 * Math.min(dist / maxDist, 1)) / 60;
+
+                        data.vx += nx * strength;
+                        data.vy += ny * strength;
+                    } else {
+                        const clamp = (v) => Math.max(-MAX_SPEED, Math.min(MAX_SPEED, v * 0.5));
+                        data.vx = clamp(vel.x) / 60;
+                        data.vy = clamp(vel.y) / 60;
+                    }
+                };
+
+                balloon.addEventListener('mousedown', startDrag);
+                balloon.addEventListener('touchstart', startDrag, { passive: false });
+                balloon.addEventListener('dragstart', (e) => e.preventDefault());
+                document.addEventListener('mousemove', drag);
+                document.addEventListener('touchmove', drag, { passive: false });
+                document.addEventListener('mouseup', endDrag);
+                document.addEventListener('touchend', endDrag);
+            }
+
+            function updateElements() {
+                const now = Date.now();
+                elements.forEach((data, element) => {
+                    if (element === currentDragged) return;
+
+                    if (element.classList.contains('balloon')) {
+                        const time = now * 0.001 + data.floatSeed;
+                        data.vx += Math.cos(time * 0.8) * 0.015;
+                        data.vy += Math.sin(time * 1.2) * 0.02 - 0.01;
+                        data.vx *= 0.93;
+                        data.vy *= 0.95;
+                    }
+
+                    data.x += data.vx;
+                    data.y += data.vy;
+
+                    const rect = element.getBoundingClientRect();
+                    if (data.x < -rect.width) data.x = window.innerWidth;
+                    if (data.x > window.innerWidth) data.x = -rect.width;
+                    if (data.y < -rect.height) data.y = window.innerHeight;
+                    if (data.y > window.innerHeight) data.y = -rect.height;
+
+                    element.style.left = `${data.x}px`;
+                    element.style.top = `${data.y}px`;
+                });
+                requestAnimationFrame(updateElements);
+            }
+
+            setInterval(() => spawnFloatingElement('bubble'), spawnConfig.bubble.rate);
+            setInterval(() => spawnFloatingElement('balloon'), spawnConfig.balloon.rate);
+            setTimeout(() => spawnFloatingElement('bubble'), 300);
+            setTimeout(() => spawnFloatingElement('balloon'), 600);
+            setTimeout(() => spawnFloatingElement('bubble'), 1000);
+            setTimeout(() => spawnFloatingElement('balloon'), 1500);
+            updateElements();
         });
-
-        requestAnimationFrame(tick);
-    }
-
-    setInterval(spawnBubble,  CFG.bubble.rate);
-    setInterval(spawnBalloon, CFG.balloon.rate);
-    for (let i = 0; i < 3; i++) setTimeout(spawnBubble,  i * 500);
-    for (let i = 0; i < 2; i++) setTimeout(spawnBalloon, i * 800);
-    requestAnimationFrame(tick);
-});
-</script>
+    </script>
 </body>
 </html>
